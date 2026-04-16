@@ -9,6 +9,15 @@ app.get("/", (req, res) => {
   res.json({ ok: true, service: "Vistora Google Reviews Proxy" });
 });
 
+app.get("/debug-key", (req, res) => {
+  const key = process.env.GOOGLE_MAPS_API_KEY || "";
+
+  res.json({
+    hasKey: !!key,
+    keyPrefix: key ? key.slice(0, 6) : null
+  });
+});
+
 app.get("/google-reviews", async (req, res) => {
   const placeId = req.query.place_id;
 
