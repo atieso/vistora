@@ -7,7 +7,7 @@ app.use(cors());
 
 app.get("/", (req, res) => {
   res.json({ ok: true, service: "Vistora Google Reviews Proxy" });
-});
+}); 
 
 app.get("/debug-key", (req, res) => {
   const key = process.env.GOOGLE_MAPS_API_KEY || "";
