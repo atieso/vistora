@@ -10,6 +10,36 @@ import { createShopifyPage } from "./shopify.js";
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
+async function initDatabase() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS seo_keywords (
+        id SERIAL PRIMARY KEY,
+        keyword TEXT NOT NULL UNIQUE,
+        category TEXT,
+        url_target TEXT,
+        priority TEXT DEFAULT 'media',
+        status TEXT DEFAULT 'pending',
+        generated_title TEXT,
+        generated_handle TEXT,
+        meta_title TEXT,
+        meta_description TEXT,
+        html_body TEXT,
+        shopify_page_id TEXT,
+        published_url TEXT,
+        error_message TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        generated_at TIMESTAMP,
+        published_at TIMESTAMP
+      );
+    `);
+
+    console.log("Tabella seo_keywords pronta");
+  } catch (error) {
+    console.error("Errore inizializzazione database:", error);
+  }
+}
+
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
