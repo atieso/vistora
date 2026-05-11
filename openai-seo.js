@@ -6,6 +6,14 @@ const openai = new OpenAI({
 });
 
 export async function generateSeoPage({ keyword, category, urlTarget }) {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("Missing OPENAI_API_KEY");
+  }
+
+  if (!keyword) {
+    throw new Error("Missing keyword");
+  }
+
   const prompt = buildSeoPrompt({
     keyword,
     category,
@@ -19,7 +27,7 @@ export async function generateSeoPage({ keyword, category, urlTarget }) {
       {
         role: "system",
         content:
-          "Sei un copywriter SEO italiano specializzato in ecommerce Shopify. Rispondi solo con JSON valido."
+          "Sei un copywriter SEO italiano specializzato in ecommerce Shopify. Devi generare pagine SEO originali, commerciali, utili e non duplicate. Rispondi esclusivamente con JSON valido, senza markdown e senza testo fuori dal JSON."
       },
       {
         role: "user",
@@ -59,13 +67,38 @@ export async function generateSeoPage({ keyword, category, urlTarget }) {
     }
   }
 
+  parsed.title = cleanText(parsed.title).slice(0, 90);
+  parsed.meta_title = cleanText(parsed.meta_title).slice(0, 70);
+  parsed.meta_description = cleanText(parsed.meta_description).slice(0, 170);
   parsed.handle = normalizeHandle(parsed.handle || keyword);
+  parsed.html_body = String(parsed.html_body || "").trim();
+
+  if (parsed.html_body.length < 3000) {
+    throw new Error(
+      `Contenuto generato inferiore a 3000 caratteri: ${parsed.html_body.length}`
+    );
+  }
+
+  if (!parsed.html_body.includes("<h1")) {
+    throw new Error("Il contenuto generato non contiene un H1 HTML");
+  }
+
+  if (!parsed.html_body.includes("<h2")) {
+    throw new Error("Il contenuto generato non contiene H2 HTML");
+  }
 
   return parsed;
 }
 
+function cleanText(value) {
+  return String(value || "")
+    .replace(/[\n\r\t]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function normalizeHandle(value) {
-  return String(value)
+  return String(value || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
