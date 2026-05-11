@@ -599,7 +599,35 @@ app.post("/seo/init-db", async (req, res) => {
   }
 });
 
+app.get("/seo/test-insert", async (req, res) => {
+  try {
+    await pool.query(
+      `
+      INSERT INTO seo_keywords 
+        (keyword, category, url_target, priority, status)
+      VALUES 
+        ($1, $2, $3, $4, 'pending')
+      ON CONFLICT (keyword) DO NOTHING
+      `,
+      [
+        "idee regalo eleganti",
+        "Idee regalo",
+        "https://vistora.it/",
+        "alta"
+      ]
+    );
 
+    res.json({
+      ok: true,
+      message: "Keyword di test inserita"
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: String(error)
+    });
+  }
+});
 
 const port = process.env.PORT || 10000;
 
