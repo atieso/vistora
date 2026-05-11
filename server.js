@@ -629,6 +629,20 @@ app.get("/seo/test-insert", async (req, res) => {
   }
 });
 
+app.get("/seo/debug-shopify", (req, res) => {
+  const shop = process.env.SHOPIFY_SHOP || "";
+  const apiVersion = process.env.SHOPIFY_API_VERSION || "2026-04";
+  const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN || "";
+
+  res.json({
+    shop,
+    apiVersion,
+    endpoint: `https://${shop}/admin/api/${apiVersion}/graphql.json`,
+    hasToken: !!token,
+    tokenPrefix: token ? token.slice(0, 6) : null
+  });
+});
+
 const port = process.env.PORT || 10000;
 
 initDatabase().then(() => {
