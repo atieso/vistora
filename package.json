@@ -1,13 +1,19 @@
 {
-  "name": "vistora-google-reviews-proxy",
+  "name": "vistora-tools",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "cron:seo": "node cron-seo.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "csv-parse": "^5.5.6",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "cors": "^2.8.5"
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.80.1",
+    "pg": "^8.13.1"
   }
 }
