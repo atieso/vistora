@@ -1,16 +1,25 @@
+function normalizeShopDomain(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "");
+}
+
 export async function createShopifyPage({
   title,
   handle,
-  html_body,
-  meta_title,
-  meta_description
+  html_body
 }) {
-  const shop = process.env.SHOPIFY_SHOP;
+  const shop = normalizeShopDomain(process.env.SHOPIFY_SHOP);
   const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
-  const apiVersion = process.env.SHOPIFY_API_VERSION || "2026-01";
+  const apiVersion = process.env.SHOPIFY_API_VERSION || "2026-04";
 
   if (!shop || !token) {
     throw new Error("Missing Shopify credentials");
+  }
+
+  if (!shop.endsWith(".myshopify.com")) {
+    throw new Error(`SHOPIFY_SHOP non valido: ${shop}. Usa il dominio .myshopify.com`);
   }
 
   const endpoint = `https://${shop}/admin/api/${apiVersion}/graphql.json`;
@@ -22,6 +31,7 @@ export async function createShopifyPage({
           id
           title
           handle
+          isPublished
         }
         userErrors {
           field
@@ -36,11 +46,7 @@ export async function createShopifyPage({
       title,
       handle,
       body: html_body,
-      isPublished: true,
-      seo: {
-        title: meta_title,
-        description: meta_description
-      }
+      isPublished: true
     }
   };
 
@@ -56,10 +62,21 @@ export async function createShopifyPage({
     })
   });
 
-  const data = await response.json();
+  const text = await response.text();
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`Shopify non ha restituito JSON. Endpoint: ${endpoint}. Risposta: ${text}`);
+  }
 
   if (!response.ok) {
-    throw new Error(`Shopify HTTP error: ${JSON.stringify(data)}`);
+    throw new Error(`Shopify HTTP error ${response.status}. Endpoint: ${endpoint}. Risposta: ${text}`);
+  }
+
+  if (data.errors?.length) {
+    throw new Error(`Shopify GraphQL errors: ${JSON.stringify(data.errors)}`);
   }
 
   const errors = data?.data?.pageCreate?.userErrors || [];
