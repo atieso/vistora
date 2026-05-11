@@ -527,6 +527,50 @@ app.post("/seo/cron", async (req, res) => {
   }
 });
 
+app.post("/seo/init-db", async (req, res) => {
+  const secret = req.headers["x-cron-secret"];
+
+  if (secret !== process.env.CRON_SECRET) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS seo_keywords (
+        id SERIAL PRIMARY KEY,
+        keyword TEXT NOT NULL UNIQUE,
+        category TEXT,
+        url_target TEXT,
+        priority TEXT DEFAULT 'media',
+        status TEXT DEFAULT 'pending',
+        generated_title TEXT,
+        generated_handle TEXT,
+        meta_title TEXT,
+        meta_description TEXT,
+        html_body TEXT,
+        shopify_page_id TEXT,
+        published_url TEXT,
+        error_message TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        generated_at TIMESTAMP,
+        published_at TIMESTAMP
+      );
+    `);
+
+    res.json({
+      ok: true,
+      message: "Tabella seo_keywords creata o già esistente"
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: String(error)
+    });
+  }
+});
+
+
+
 const port = process.env.PORT || 10000;
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
